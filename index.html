@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Padosi — Interactive Prototype</title>
+<style>
+:root{--bg:#f6f4ee;--card:#fff;--ink:#1b1b1b;--mut:#6b6b66;--line:#ddd9cc;--acc:#e8a317;--red:#d6303a;--org:#e8801a;--grn:#1f9d55;--blu:#2563eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14140f;--card:#201f19;--ink:#f1efe6;--mut:#a09d90;--line:#37352b}}
+:root[data-theme="dark"]{--bg:#14140f;--card:#201f19;--ink:#f1efe6;--mut:#a09d90;--line:#37352b}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:18px 16px 6px;max-width:980px;margin:auto}
+h1{margin:0;font-size:24px}h1 span{color:var(--acc)}
+.sub{color:var(--mut);margin:2px 0 0}
+.wrap{max-width:980px;margin:auto;padding:10px 16px 30px;display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:820px){.wrap{grid-template-columns:380px minmax(0,1fr)}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.panel h2{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.air{display:flex;gap:8px;align-items:center;font-size:12px;background:rgba(232,163,23,.15);border-radius:10px;padding:6px 10px;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--grn)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:9px 12px}
+button.p{background:var(--acc);border-color:var(--acc);color:#1b1b1b;font-weight:700}
+button.mic{width:100%;padding:14px;font-size:16px}
+button.rec{background:var(--red);border-color:var(--red);color:#fff}
+textarea{width:100%;min-height:70px;font:inherit;border:1px solid var(--line);border-radius:12px;padding:9px;background:var(--bg);color:var(--ink);margin:8px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{font-size:12px;padding:6px 9px}
+.tc{border-left:6px solid var(--org);background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:10px}
+.tc.CRITICAL{border-color:var(--red)}.tc.HIGH{border-color:var(--org)}.tc.MEDIUM{border-color:var(--blu)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;color:#fff;background:var(--org)}
+.tag.CRITICAL{background:var(--red)}.tag.MEDIUM{background:var(--blu)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px;margin-top:6px}.kv b{color:var(--mut);font-weight:600}
+.relay{display:flex;align-items:center;gap:4px;margin:12px 0 4px;overflow-x:auto}
+.node{flex:0 0 auto;font-size:11px;text-align:center;border:2px solid var(--line);border-radius:10px;padding:6px 7px;min-width:62px}
+.node.on{border-color:var(--grn);background:rgba(31,157,85,.15)}
+.arrow{color:var(--mut);flex:0 0 auto}
+.alert{border:1px solid var(--line);border-left:6px solid var(--org);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--bg)}
+.alert.CRITICAL{border-left-color:var(--red)}.alert.MEDIUM{border-left-color:var(--blu)}.alert.done{opacity:.65;border-left-color:var(--grn)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.raw{color:var(--mut);font-size:12px;margin:3px 0 0}
+.note{font-size:12px;color:var(--mut);margin-top:8px}
+.ok{color:var(--grn);font-weight:700}
+.safe{max-width:980px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--mut)}
+</style></head><body>
+<header><h1>Padosi <span>·</span> your neighbours are the network</h1>
+<p class="sub">Interactive prototype of the core loop: speak → triage → relay → respond. Runs entirely in your browser, no server.</p></header>
+<div class="wrap">
+<section class="panel" aria-label="Resident phone">
+<h2>📱 Resident phone</h2>
+<div class="air"><span class="dot"></span><span><b>Airplane mode · No signal.</b> Bluetooth + Wi-Fi Direct only</span></div>
+<button class="mic p" id="mic">🎤 Hold to speak (or type below)</button>
+<textarea id="txt" placeholder="Speak or type in Tamil, Hindi, English or mixed…" aria-label="Emergency message"></textarea>
+<div class="chips" id="chips"></div>
+<button class="p" id="go" style="width:100%;margin-top:10px">Create triage card & send</button>
+<div id="card"></div>
+<div id="relay"></div>
+<div id="status" class="note"></div>
+</section>
+<section class="panel" aria-label="Responder dashboard">
+<h2>💻 Responder dashboard (laptop via Office Kit)</h2>
+<div id="queue"></div>
+<p class="note">Alerts arrive sorted by urgency. A responder taps “On my way” and the resident’s phone is updated over the same relay.</p>
+</section></div>
+<p class="safe">Prototype note: triage here uses a lightweight on-page keyword model to demonstrate the flow. The planned build swaps this for on-device Whisper + a small quantised Gemma/Llama model, and relays over Android Nearby Connections. Location shown is a fixed demo point.</p>
+<script>
+const SAMPLES=["Water is entering our house, 4 people trapped, one elderly woman can't walk","எங்க வீட்டுல தண்ணி வருது, குழந்தை மூச்சு விட முடியல, டாக்டர் வேணும்","बाढ़ का पानी बढ़ रहा है, 3 लोग फंसे हैं, बुजुर्ग हैं, बचाओ","We need food and milk for 2 babies, stuck since morning"];
+const RULES=[["Medical",/medical|doctor|ambulance|injur|pregnan|heart|breath|insulin|bleed|மருத்து|டாக்டர்|மூச்சு|கர்ப்ப|दवा|डॉक्टर|बीमार|साँस|दिल/i],
+["Rescue",/trapped|stuck|rising|entering|flood|boat|rescue|collapse|வெள்ளம்|தண்ணி|சிக்க|बाढ़|फंस|पानी|बचाओ/i],
+["Food & water",/food|hungry|milk|drinking|உணவு|பசி|பால்|खाना|भूख|दूध/i],
+["Shelter",/shelter|roof|homeless|இடிந்|आश्रय|छत/i]];
+const VUL=/elderly|baby|babies|child|infant|pregnan|can't walk|குழந்தை|பாட்டி|தாத்தா|बुजुर्ग|बच्चा|बच्चे/i;
+const UP=/trapped|rising|entering|breath|bleed|மூச்சு|சிக்க|बढ़|फंस|बचाओ|can't walk/i;
+const dev=Array.from({length:0});
+let alerts=[{id:1,need:"Food & water",urg:"MEDIUM",n:12,loc:"Sector 4 shelter",raw:"Community hall needs drinking water for 12",st:"new",by:null},
+{id:2,need:"Medical",urg:"HIGH",n:1,loc:"Lake View Apts, B-204",raw:"Insulin needed, power out",st:"new",by:null}];
+let mine=null,nid=10;
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+$("#chips").innerHTML=SAMPLES.map((s,i)=>`<button data-i="${i}">${["EN rescue","TA medical","HI rescue","EN food"][i]}</button>`).join("");
+$("#chips").onclick=e=>{const i=e.target.dataset.i;if(i!=null)$("#txt").value=SAMPLES[i]};
+function triage(t){
+ let need="General help";for(const[n,r]of RULES)if(r.test(t)){need=n;break}
+ let m=t.match(/(\d+)\s*(people|persons|members|பேர்|लोग|babies)?/i);let n=m?Math.min(+m[1],99):1;
+ let u=need==="Medical"?"HIGH":need==="Rescue"?"HIGH":"MEDIUM";
+ if(UP.test(t)||(need==="Medical"&&VUL.test(t)))u="CRITICAL";else if(VUL.test(t)&&u==="MEDIUM")u="HIGH";
+ const lang=/[\u0B80-\u0BFF]/.test(t)?"Tamil":/[\u0900-\u097F]/.test(t)?"Hindi":"English";
+ return{need,urg:u,n,lang,vul:VUL.test(t)}}
+function renderQ(){
+ const o={CRITICAL:0,HIGH:1,MEDIUM:2};
+ const s=[...alerts].sort((a,b)=>(a.st==="done")-(b.st==="done")||o[a.urg]-o[b.urg]);
+ $("#queue").innerHTML=s.map(a=>`<div class="alert ${a.urg} ${a.st==="done"?"done":""}"><div class="row"><div><span class="tag ${a.urg}">${a.urg}</span> <b>${a.need}</b> · ${a.n} ${a.n>1?"people":"person"}</div>
+ ${a.st==="done"?`<span class="ok">✔ ${esc(a.by)} on the way</span>`:`<button class="p" data-id="${a.id}">On my way</button>`}</div>
+ <div class="raw">📍 ${esc(a.loc)}</div><div class="raw">“${esc(a.raw)}”</div></div>`).join("")}
+$("#queue").onclick=e=>{const id=e.target.dataset.id;if(!id)return;
+ const a=alerts.find(x=>x.id==id);a.st="done";a.by="Ravi (volunteer)";renderQ();
+ if(mine&&mine===a.id)$("#status").innerHTML='<span class="ok">✔ Ravi (volunteer) is on the way · ~8 min</span> — confirmation relayed back over the mesh.'}
+$("#go").onclick=()=>{
+ const t=$("#txt").value.trim();if(t.length<5){$("#status").textContent="Say or type what you need first.";return}
+ const r=triage(t);
+ $("#card").innerHTML=`<div class="tc ${r.urg}"><span class="tag ${r.urg}">${r.urg}</span> <b>${r.need}</b>
+ <div class="kv"><b>Headcount</b><span>${r.n}</span><b>Language</b><span>${r.lang}</span><b>Vulnerable</b><span>${r.vul?"Yes":"No"}</span><b>Location</b><span>12.9755°N, 80.2207°E (demo GPS)</span></div></div>`;
+ const names=["You","Neighbour A","Neighbour B","Responder"];
+ $("#relay").innerHTML='<div class="relay">'+names.map((n,i)=>`<div class="node" id="n${i}">${n}</div>${i<3?'<span class="arrow">➜</span>':""}`).join("")+"</div>";
+ $("#status").textContent="Relaying hop by hop…";
+ names.forEach((_,i)=>setTimeout(()=>{$("#n"+i).classList.add("on");
+  if(i===3){const id=nid++;mine=id;alerts.push({id,need:r.need,urg:r.urg,n:r.n,loc:"Your location (demo)",raw:t,st:"new",by:null});renderQ();
+   $("#status").textContent="Delivered to responder dashboard. Waiting for someone to accept…"}},i*700))};
+const mic=$("#mic");const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+mic.onclick=()=>{if(!SR){$("#status").textContent="Voice input isn’t supported in this browser. Type or use a sample chip. (The real app uses on-device Whisper.)";return}
+ const r=new SR();r.lang="en-IN";r.onstart=()=>{mic.classList.add("rec");mic.textContent="Listening… speak now"};
+ r.onend=()=>{mic.classList.remove("rec");mic.textContent="🎤 Hold to speak (or type below)"};
+ r.onresult=e=>{$("#txt").value=e.results[0][0].transcript};r.onerror=()=>{$("#status").textContent="Mic blocked. Type or use a sample chip."};r.start()};
+renderQ();
+</script></body></html>

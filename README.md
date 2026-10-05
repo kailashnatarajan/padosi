@@ -36,7 +36,7 @@ The prototype demonstrates the **user flow**. Triage uses a lightweight keyword 
 Open `index.html` in Chrome. Voice input works in Chrome; other browsers can use the sample chips.
 
 ## Live demo
-Enable GitHub Pages (Settings → Pages → Deploy from branch → `main` / root) and the demo will be at `https://<your-username>.github.io/<repo-name>/`.
+`https://kailashnatarajan.github.io/padosi/`
 
 ## Team: Semicolon Survivors
 - **Kailash N**, Team Leader & Lead Developer
